@@ -11,22 +11,22 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-key-please-change')
 
-# 数据库配置
-database_url = os.getenv('DATABASE_URL')
-if database_url and database_url.startswith('postgres://'):
-    database_url = database_url.replace('postgres://', 'postgresql://', 1)
+# 基本配置
+app.config.update(
+    SECRET_KEY=os.getenv('SECRET_KEY', 'dev-key-please-change'),
+    SQLALCHEMY_TRACK_MODIFICATIONS=False,
+    SQLALCHEMY_DATABASE_URI=os.getenv('DATABASE_URL', 'sqlite:///blog.db').replace('postgres://', 'postgresql://')
+)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = database_url or 'sqlite:///blog.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
+# 初始化扩展
 db = SQLAlchemy(app)
-
-# 初始化 Flask-Login
-login_manager = LoginManager()
-login_manager.init_app(app)
+login_manager = LoginManager(app)
 login_manager.login_view = 'login'
+
+# 数据库初始化
+with app.app_context():
+    db.create_all()
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -47,21 +47,21 @@ class Post(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-@app.before_request
-def init_db():
-    try:
-        db.create_all()
-        if not User.query.filter_by(username='admin').first():
-            admin = User(username='admin')
-            admin.set_password('casfoq-zavqy1-zUzxan')
-            db.session.add(admin)
-            db.session.commit()
-    except Exception as e:
-        app.logger.error(f"Database initialization error: {str(e)}")
-
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+def create_admin():
+    """Create admin user if it doesn't exist"""
+    if not User.query.filter_by(username='admin').first():
+        admin = User(username='admin')
+        admin.set_password('casfoq-zavqy1-zUzxan')
+        db.session.add(admin)
+        db.session.commit()
+
+# 创建管理员用户
+with app.app_context():
+    create_admin()
 
 # 首页路由
 @app.route('/')
