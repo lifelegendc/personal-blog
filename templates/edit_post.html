@@ -3,63 +3,11 @@
 {% block title %}{% if post %}编辑文章{% else %}新建文章{% endif %} - 个人博客{% endblock %}
 
 {% block head %}
-<!-- TinyMCE -->
-<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tinymce/tinymce-webcomponent@2/dist/tinymce-webcomponent.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tinymce-i18n@23.10.9/langs6/zh_CN.min.js"></script>
-
-<script>
-    tinymce.init({
-        selector: '#content',
-        language: 'zh_CN',
-        plugins: [
-            'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-            'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-            'insertdatetime', 'media', 'table', 'help', 'wordcount', 'emoticons'
-        ],
-        toolbar: 'undo redo | styles | bold italic forecolor backcolor | ' +
-                'alignleft aligncenter alignright alignjustify | ' +
-                'bullist numlist outdent indent | link image media table emoticons | ' +
-                'removeformat preview fullscreen help',
-        menubar: 'file edit view insert format tools table help',
-        toolbar_sticky: true,
-        toolbar_sticky_offset: 64,
-        autosave_ask_before_unload: true,
-        autosave_interval: '30s',
-        height: 500,
-        statusbar: true,
-        paste_data_images: true,
-        content_css: [
-            '//fonts.googleapis.com/css?family=Lato:300,300i,400,400i',
-            '//www.tiny.cloud/css/codepen.min.css'
-        ],
-        content_style: `
-            body {
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-                font-size: 16px;
-                line-height: 1.8;
-                padding: 1rem;
-                max-width: 100%;
-            }
-            img {
-                max-width: 100%;
-                height: auto;
-                display: block;
-                margin: 1rem auto;
-            }
-        `,
-        images_upload_handler: function (blobInfo, progress) {
-            return new Promise((resolve, reject) => {
-                reject('图片上传功能暂未实现');
-            });
-        },
-        setup: function (editor) {
-            editor.on('change', function () {
-                editor.save();
-            });
-        }
-    });
-</script>
+<script src="https://cdn.ckeditor.com/ckeditor5/40.1.0/classic/ckeditor.js"></script>
+<script src="https://cdn.ckeditor.com/ckeditor5/40.1.0/classic/translations/zh-cn.js"></script>
+<style>
+.ck-editor__editable { min-height: 400px; }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -81,10 +29,7 @@
                         </div>
                         <div class="mb-4">
                             <label for="content" class="form-label">内容</label>
-                            <textarea class="form-control" 
-                                      id="content" 
-                                      name="content" 
-                                      rows="20">{{ post.content if post else '' }}</textarea>
+                            <textarea id="content" name="content">{{ post.content if post else '' }}</textarea>
                         </div>
                         <div class="mb-3">
                             <button type="submit" class="btn btn-primary btn-lg">
@@ -100,4 +45,23 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+ClassicEditor
+    .create(document.querySelector('#content'), {
+        language: 'zh-cn',
+        toolbar: [
+            'heading', '|',
+            'bold', 'italic', 'link', '|',
+            'bulletedList', 'numberedList', '|',
+            'blockQuote', 'insertTable', '|',
+            'undo', 'redo'
+        ]
+    })
+    .catch(error => {
+        console.error(error);
+    });
+</script>
 {% endblock %}
