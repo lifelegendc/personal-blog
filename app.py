@@ -94,7 +94,7 @@ init_db()
 @app.route('/')
 def index():
     posts = Post.query.order_by(Post.created_at.desc()).all()
-    footer_text = ' 2025 '
+    footer_text = ''
     return render_template('index.html', posts=posts, footer_text=footer_text)
 
 # 文章详情页
