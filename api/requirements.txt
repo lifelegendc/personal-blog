@@ -8,3 +8,4 @@ markdown==3.2.1
 psycopg2-binary==2.9.9
 waitress==2.0.0
 importlib-metadata==4.8.1
+Flask-Caching==2.0.2

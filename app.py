@@ -58,8 +58,7 @@ def init_db():
     """初始化数据库"""
     try:
         # 创建所有表
-        with app.app_context():
-            db.create_all()
+        db.create_all()
         logger.info("数据库表创建成功")
 
         # 检查是否存在管理员用户
@@ -76,6 +75,16 @@ def init_db():
         logger.error(f"数据库初始化错误: {str(e)}")
         db.session.rollback()
         raise
+
+# 添加数据库连接池配置
+engine_options = {
+    "pool_size": 5,
+    "max_overflow": 10,
+    "pool_timeout": 30,
+    "pool_recycle": 1800
+}
+
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = engine_options
 
 # 在应用启动时初始化数据库
 init_db()

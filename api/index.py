@@ -1,5 +1,5 @@
 from http.server import BaseHTTPRequestHandler
-from app import app, init_db
+from app import app
 import logging
 from urllib.parse import parse_qs
 from io import BytesIO
@@ -7,6 +7,11 @@ from io import BytesIO
 # 配置日志
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# 在应用启动时初始化数据库
+with app.app_context():
+    from app import init_db
+    init_db()
 
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -17,10 +22,6 @@ class Handler(BaseHTTPRequestHandler):
 
     def _handle_request(self):
         try:
-            # 初始化数据库
-            with app.app_context():
-                init_db()
-
             # 准备 WSGI 环境
             environ = {
                 'wsgi.version': (1, 0),
@@ -46,7 +47,6 @@ class Handler(BaseHTTPRequestHandler):
                 environ[key] = value
 
             # 处理响应
-            response_body = []
             def start_response(status, headers):
                 self.send_response(int(status.split()[0]))
                 for header, value in headers:
