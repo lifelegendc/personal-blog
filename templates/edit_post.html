@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}{% if post %}编辑文章{% else %}新建文章{% endif %} - 个人博客{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10 offset-md-1">
+        <h1 class="mb-4">{% if post %}编辑文章{% else %}新建文章{% endif %}</h1>
+        <form method="POST">
+            <div class="mb-3">
+                <label for="title" class="form-label">标题</label>
+                <input type="text" class="form-control" id="title" name="title" value="{{ post.title if post else '' }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="content" class="form-label">内容 (支持Markdown格式)</label>
+                <textarea class="form-control" id="content" name="content" rows="15" required>{{ post.content if post else '' }}</textarea>
+            </div>
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary">保存</button>
+                <a href="{{ url_for('admin') }}" class="btn btn-secondary">取消</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-10 offset-md-1">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Markdown 编写提示：</h5>
+                <ul class="mb-0">
+                    <li># 一级标题</li>
+                    <li>## 二级标题</li>
+                    <li>**粗体文字**</li>
+                    <li>*斜体文字*</li>
+                    <li>[链接文字](URL)</li>
+                    <li>- 无序列表项</li>
+                    <li>1. 有序列表项</li>
+                    <li>```代码块```</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
