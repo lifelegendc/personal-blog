@@ -1,7 +1,7 @@
 from http.server import BaseHTTPRequestHandler
 from app import app
 import logging
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, urlparse
 from io import BytesIO
 
 # 配置日志
@@ -17,15 +17,14 @@ with app.app_context():
 app = app
 
 class Handler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self._handle_request()
-
-    def do_POST(self):
-        self._handle_request()
-
     def _handle_request(self):
         try:
-            # 准备 WSGI 环境
+            # 解析请求路径
+            parsed_path = urlparse(self.path)
+            path = parsed_path.path
+            query_params = parse_qs(parsed_path.query)
+
+            # 设置环境变量
             environ = {
                 'wsgi.version': (1, 0),
                 'wsgi.url_scheme': 'https',
@@ -34,12 +33,14 @@ class Handler(BaseHTTPRequestHandler):
                 'wsgi.multithread': True,
                 'wsgi.multiprocess': False,
                 'wsgi.run_once': False,
+                'SERVER_SOFTWARE': self.server_version,
                 'REQUEST_METHOD': self.command,
-                'PATH_INFO': self.path,
-                'QUERY_STRING': self.path.split('?', 1)[1] if '?' in self.path else '',
+                'SCRIPT_NAME': '',
+                'PATH_INFO': path,
+                'QUERY_STRING': parsed_path.query,
                 'SERVER_NAME': self.server.server_name,
                 'SERVER_PORT': str(self.server.server_port),
-                'SERVER_PROTOCOL': self.request_version,
+                'SERVER_PROTOCOL': self.protocol_version
             }
 
             # 添加 HTTP 头
@@ -49,20 +50,29 @@ class Handler(BaseHTTPRequestHandler):
                     key = 'HTTP_' + key
                 environ[key] = value
 
-            # 处理响应
+            # 处理请求
+            response_body = []
             def start_response(status, headers):
                 self.send_response(int(status.split()[0]))
                 for header, value in headers:
                     self.send_header(header, value)
                 self.end_headers()
 
-            # 调用 Flask 应用
+            # 调用 Flask 应用处理请求
             response = app(environ, start_response)
+            
+            # 发送响应
             for data in response:
                 self.wfile.write(data)
 
         except Exception as e:
             logger.error(f"Error handling request: {str(e)}")
-            self.send_error(500, str(e))
+            self.send_error(500, "Internal Server Error")
+
+    def do_GET(self):
+        self._handle_request()
+
+    def do_POST(self):
+        self._handle_request()
 
 handler = Handler
