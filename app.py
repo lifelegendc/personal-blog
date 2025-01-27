@@ -196,7 +196,7 @@ def logout():
 
 @app.route('/search')
 def search():
-    query = request.args.get('q', '')
+    query = request.args.get('q', '').strip()
     if query:
         # 使用 SQLAlchemy 的 or_ 和 like 进行模糊搜索
         search_results = Post.query.filter(
@@ -206,7 +206,8 @@ def search():
             )
         ).order_by(Post.created_at.desc()).all()
     else:
-        search_results = []
+        # 如果查询为空，返回所有文章
+        search_results = Post.query.order_by(Post.created_at.desc()).all()
     
     return render_template('search.html', posts=search_results, query=query)
 

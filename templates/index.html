@@ -5,15 +5,17 @@
 {% block content %}
 <div class="row mb-4">
     <div class="col-md-8 offset-md-2">
-        <form action="{{ url_for('search') }}" method="get" class="d-flex">
-            <input type="search" name="q" class="form-control me-2" placeholder="搜索文章..." aria-label="Search" value="{{ request.args.get('q', '') }}">
-            <button class="btn btn-outline-primary" type="submit">搜索</button>
-        </form>
+        <input type="search" 
+               id="searchInput" 
+               class="form-control" 
+               placeholder="搜索文章..." 
+               aria-label="Search" 
+               value="{{ request.args.get('q', '') }}">
     </div>
 </div>
 
 <div class="row">
-    <div class="col-md-8 offset-md-2">
+    <div class="col-md-8 offset-md-2" id="searchResults">
         <h1 class="mb-4">最新文章</h1>
         {% for post in posts %}
         <article class="card mb-4">
@@ -39,4 +41,27 @@
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script>
+let searchTimeout;
+const searchInput = document.getElementById('searchInput');
+const resultsContainer = document.getElementById('searchResults');
+
+searchInput.addEventListener('input', function(e) {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        const query = e.target.value.trim();
+        fetch(`/search?q=${encodeURIComponent(query)}`)
+            .then(response => response.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newResults = doc.querySelector('#searchResults');
+                if (newResults) {
+                    resultsContainer.innerHTML = newResults.innerHTML;
+                }
+            });
+    }, 300); // 300ms 延迟，避免频繁请求
+});
+</script>
 {% endblock %}
