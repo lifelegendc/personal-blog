@@ -2,42 +2,83 @@
 
 {% block title %}{% if post %}编辑文章{% else %}新建文章{% endif %} - 个人博客{% endblock %}
 
-{% block content %}
-<div class="row">
-    <div class="col-md-10 offset-md-1">
-        <h1 class="mb-4">{% if post %}编辑文章{% else %}新建文章{% endif %}</h1>
-        <form method="POST">
-            <div class="mb-3">
-                <label for="title" class="form-label">标题</label>
-                <input type="text" class="form-control" id="title" name="title" value="{{ post.title if post else '' }}" required>
-            </div>
-            <div class="mb-3">
-                <label for="content" class="form-label">内容 (支持Markdown格式)</label>
-                <textarea class="form-control" id="content" name="content" rows="15" required>{{ post.content if post else '' }}</textarea>
-            </div>
-            <div class="mb-3">
-                <button type="submit" class="btn btn-primary">保存</button>
-                <a href="{{ url_for('admin') }}" class="btn btn-secondary">取消</a>
-            </div>
-        </form>
-    </div>
-</div>
+{% block head %}
+<!-- TinyMCE -->
+<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+<script>
+    tinymce.init({
+        selector: '#content',
+        plugins: 'preview importcss searchreplace autolink autosave save directionality code visualblocks visualchars fullscreen image link media codesample table charmap pagebreak nonbreaking anchor insertdatetime advlist lists wordcount help charmap quickbars emoticons',
+        menubar: 'file edit view insert format tools table help',
+        toolbar: 'undo redo | bold italic underline strikethrough | fontfamily fontsize blocks | alignleft aligncenter alignright alignjustify | outdent indent |  numlist bullist | forecolor backcolor removeformat | pagebreak | charmap emoticons | fullscreen  preview save print | insertfile image media link anchor codesample | ltr rtl',
+        toolbar_sticky: true,
+        autosave_ask_before_unload: true,
+        autosave_interval: '30s',
+        height: 600,
+        menubar: true,
+        language: 'zh_CN',
+        content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial; font-size: 16px; line-height: 1.8; }',
+        quickbars_selection_toolbar: 'bold italic | quicklink h2 h3 blockquote quickimage quicktable',
+        image_advtab: true,
+        link_list: [
+            { title: '首页', value: '/' }
+        ],
+        image_class_list: [
+            { title: '无边距', value: '' },
+            { title: '边距', value: 'img-fluid rounded my-3' }
+        ],
+        importcss_append: true,
+        templates: [
+            { title: '新段落', description: '新建一个段落', content: '<p>在这里输入内容...</p>' },
+            { title: '引用块', description: '添加一个引用块', content: '<blockquote class="blockquote"><p>引用内容...</p></blockquote>' }
+        ],
+        template_cdate_format: '[CDATE: %Y/%m/%d]',
+        template_mdate_format: '[MDATE: %Y/%m/%d]',
+        smart_paste: true,
+        paste_data_images: true,
+        setup: function (editor) {
+            editor.on('change', function () {
+                editor.save();
+            });
+        }
+    });
+</script>
+{% endblock %}
 
-<div class="row mt-4">
-    <div class="col-md-10 offset-md-1">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Markdown 编写提示：</h5>
-                <ul class="mb-0">
-                    <li># 一级标题</li>
-                    <li>## 二级标题</li>
-                    <li>**粗体文字**</li>
-                    <li>*斜体文字*</li>
-                    <li>[链接文字](URL)</li>
-                    <li>- 无序列表项</li>
-                    <li>1. 有序列表项</li>
-                    <li>```代码块```</li>
-                </ul>
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <div class="card">
+                <div class="card-body">
+                    <h1 class="card-title mb-4">{% if post %}编辑文章{% else %}新建文章{% endif %}</h1>
+                    <form method="POST">
+                        <div class="mb-4">
+                            <label for="title" class="form-label">标题</label>
+                            <input type="text" 
+                                   class="form-control form-control-lg" 
+                                   id="title" 
+                                   name="title" 
+                                   value="{{ post.title if post else '' }}" 
+                                   required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="content" class="form-label">内容</label>
+                            <textarea class="form-control" 
+                                      id="content" 
+                                      name="content" 
+                                      rows="15">{{ post.content if post else '' }}</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save me-2"></i>保存
+                            </button>
+                            <a href="{{ url_for('admin') }}" class="btn btn-outline-secondary btn-lg ms-2">
+                                <i class="fas fa-times me-2"></i>取消
+                            </a>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>

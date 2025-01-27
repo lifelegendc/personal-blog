@@ -128,8 +128,8 @@ def index():
 @app.route('/post/<int:post_id>')
 def post(post_id):
     post = Post.query.get_or_404(post_id)
-    content = markdown.markdown(post.content)
-    return render_template('post.html', post=post, content=content)
+    # 直接使用 HTML 内容，不需要转换
+    return render_template('post.html', post=post, content=post.content)
 
 # 登录页面
 @app.route('/login', methods=['GET', 'POST'])
