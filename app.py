@@ -47,14 +47,17 @@ class Post(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-@app.before_first_request
+@app.before_request
 def init_db():
-    db.create_all()
-    if not User.query.filter_by(username='admin').first():
-        admin = User(username='admin')
-        admin.set_password('casfoq-zavqy1-zUzxan')
-        db.session.add(admin)
-        db.session.commit()
+    try:
+        db.create_all()
+        if not User.query.filter_by(username='admin').first():
+            admin = User(username='admin')
+            admin.set_password('casfoq-zavqy1-zUzxan')
+            db.session.add(admin)
+            db.session.commit()
+    except Exception as e:
+        app.logger.error(f"Database initialization error: {str(e)}")
 
 @login_manager.user_loader
 def load_user(user_id):
