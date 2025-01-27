@@ -3,34 +3,45 @@
 {% block title %}首页 - 个人博客{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-md-8 offset-md-2">
-        <input type="search" 
-               id="searchInput" 
-               class="form-control" 
-               placeholder="搜索文章..." 
-               aria-label="Search" 
-               value="{{ request.args.get('q', '') }}">
+<div class="container py-5">
+    <div class="row mb-5">
+        <div class="col-md-8 offset-md-2">
+            <input type="search" 
+                   id="searchInput" 
+                   class="form-control form-control-lg" 
+                   placeholder="搜索文章..." 
+                   aria-label="Search" 
+                   value="{{ request.args.get('q', '') }}">
+        </div>
     </div>
-</div>
 
-<div class="row">
-    <div class="col-md-8 offset-md-2" id="searchResults">
-        <h1 class="mb-4">最新文章</h1>
-        {% for post in posts %}
-        <article class="card mb-4">
-            <div class="card-body">
-                <h2 class="card-title">{{ post.title }}</h2>
-                <p class="card-text text-muted">
-                    发布于 {{ post.created_at.strftime('%Y-%m-%d %H:%M') }}
-                </p>
-                <p class="card-text">{{ post.content[:200] }}...</p>
-                <a href="{{ url_for('post', post_id=post.id) }}" class="btn btn-primary">阅读更多</a>
+    <div class="row">
+        <div class="col-md-8 offset-md-2" id="searchResults">
+            <h1 class="page-title mb-5">最新文章</h1>
+            <div class="articles-container">
+                {% for post in posts %}
+                <article class="card fade-in" style="animation-delay: {{ loop.index0 * 0.1 }}s">
+                    <div class="card-body">
+                        <h2 class="card-title">
+                            <a href="{{ url_for('post', post_id=post.id) }}">{{ post.title }}</a>
+                        </h2>
+                        <p class="text-muted">
+                            <i class="fas fa-calendar-alt me-2"></i>
+                            发布于 {{ post.created_at.strftime('%Y-%m-%d %H:%M') }}
+                        </p>
+                        <p class="card-text">{{ post.content[:200] }}...</p>
+                        <a href="{{ url_for('post', post_id=post.id) }}" class="btn btn-primary">
+                            阅读更多 <i class="fas fa-arrow-right ms-2"></i>
+                        </a>
+                    </div>
+                </article>
+                {% else %}
+                <div class="text-center py-5">
+                    <p class="text-muted">暂无文章</p>
+                </div>
+                {% endfor %}
             </div>
-        </article>
-        {% else %}
-        <p>暂无文章</p>
-        {% endfor %}
+        </div>
     </div>
 </div>
 
@@ -41,6 +52,7 @@
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://kit.fontawesome.com/your-code.js" crossorigin="anonymous"></script>
 
 <script>
 let searchTimeout;
@@ -61,7 +73,7 @@ searchInput.addEventListener('input', function(e) {
                     resultsContainer.innerHTML = newResults.innerHTML;
                 }
             });
-    }, 300); // 300ms 延迟，避免频繁请求
+    }, 300);
 });
 </script>
 {% endblock %}

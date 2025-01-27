@@ -5,26 +5,35 @@
 {% block content %}
 <div id="searchResults">
     {% if query %}
-        <h1 class="mb-4">搜索结果: {{ query }}</h1>
+        <h1 class="page-title mb-5">搜索结果: {{ query }}</h1>
     {% else %}
-        <h1 class="mb-4">最新文章</h1>
+        <h1 class="page-title mb-5">最新文章</h1>
     {% endif %}
 
-    {% if posts %}
-        {% for post in posts %}
-        <article class="card mb-4">
-            <div class="card-body">
-                <h2 class="card-title">{{ post.title }}</h2>
-                <p class="card-text text-muted">
-                    发布于 {{ post.created_at.strftime('%Y-%m-%d %H:%M') }}
-                </p>
-                <p class="card-text">{{ post.content[:200] }}...</p>
-                <a href="{{ url_for('post', post_id=post.id) }}" class="btn btn-primary">阅读更多</a>
+    <div class="articles-container">
+        {% if posts %}
+            {% for post in posts %}
+            <article class="card fade-in" style="animation-delay: {{ loop.index0 * 0.1 }}s">
+                <div class="card-body">
+                    <h2 class="card-title">
+                        <a href="{{ url_for('post', post_id=post.id) }}">{{ post.title }}</a>
+                    </h2>
+                    <p class="text-muted">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        发布于 {{ post.created_at.strftime('%Y-%m-%d %H:%M') }}
+                    </p>
+                    <p class="card-text">{{ post.content[:200] }}...</p>
+                    <a href="{{ url_for('post', post_id=post.id) }}" class="btn btn-primary">
+                        阅读更多 <i class="fas fa-arrow-right ms-2"></i>
+                    </a>
+                </div>
+            </article>
+            {% endfor %}
+        {% else %}
+            <div class="text-center py-5">
+                <p class="text-muted">没有找到匹配的文章</p>
             </div>
-        </article>
-        {% endfor %}
-    {% else %}
-        <p>没有找到匹配的文章</p>
-    {% endif %}
+        {% endif %}
+    </div>
 </div>
 {% endblock %}
