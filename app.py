@@ -155,13 +155,14 @@ def edit_post(post_id):
     return render_template('edit_post.html', post=post)
 
 # 删除文章
-@app.route('/admin/post/<int:post_id>/delete')
+@app.route('/admin/post/<int:post_id>/delete', methods=['POST', 'GET'])
 @login_required
 def delete_post(post_id):
     post = Post.query.get_or_404(post_id)
     if post.author == current_user:
         db.session.delete(post)
         db.session.commit()
+        flash('文章已成功删除！', 'success')
     return redirect(url_for('admin'))
 
 # 修改博客创建时间
