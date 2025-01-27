@@ -6,23 +6,30 @@ import markdown
 from datetime import datetime
 import os
 from dotenv import load_dotenv
+import re
 
 # 加载环境变量
 load_dotenv()
 
+def get_database_url():
+    """获取数据库 URL 并处理 Neon 数据库 URL 格式"""
+    if os.getenv('VERCEL_ENV') or os.getenv('PRODUCTION'):
+        db_url = os.getenv('DATABASE_URL')
+        if db_url and db_url.startswith('postgres://'):
+            # 将 postgres:// 替换为 postgresql://
+            db_url = db_url.replace('postgres://', 'postgresql://', 1)
+        return db_url
+    return os.getenv('DATABASE_URL', 'sqlite:///blog.db')
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-key-please-change')
 
-# 检查是否在生产环境
-if os.getenv('VERCEL_ENV') or os.getenv('PRODUCTION'):
-    # 在生产环境中使用 PostgreSQL
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
-    app.config['ENV'] = 'production'
-else:
-    # 本地开发环境使用 SQLite
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///blog.db')
-
+# 数据库配置
+app.config['SQLALCHEMY_DATABASE_URI'] = get_database_url()
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+if os.getenv('VERCEL_ENV') or os.getenv('PRODUCTION'):
+    app.config['ENV'] = 'production'
+
 db = SQLAlchemy(app)
 
 # 初始化 Flask-Login
