@@ -13,6 +13,9 @@ with app.app_context():
     from app import init_db
     init_db()
 
+# 导出 Flask 应用实例
+app = app
+
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         self._handle_request()
