@@ -27,10 +27,11 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-key-please-change')
 # 数据库配置
 app.config['SQLALCHEMY_DATABASE_URI'] = get_database_url()
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ECHO'] = False
 if os.getenv('VERCEL_ENV') or os.getenv('PRODUCTION'):
     app.config['ENV'] = 'production'
 
-db = SQLAlchemy(app)
+db = SQLAlchemy(app, engine_options={"echo": False})
 
 # 初始化 Flask-Login
 login_manager = LoginManager()
