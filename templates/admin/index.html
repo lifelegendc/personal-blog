@@ -1,0 +1,38 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>博客管理</h2>
+    <a href="{{ url_for('new_post') }}" class="btn btn-primary mb-3">写新博客</a>
+    
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>标题</th>
+                    <th>创建时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for post in posts %}
+                <tr>
+                    <td>{{ post.title }}</td>
+                    <td>{{ post.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td>
+                        <a href="{{ url_for('post', post_id=post.id) }}" class="btn btn-sm btn-info">查看</a>
+                        <a href="{{ url_for('edit_post', post_id=post.id) }}" class="btn btn-sm btn-primary">编辑</a>
+                        <a href="{{ url_for('admin_edit_time', post_id=post.id) }}" class="btn btn-sm btn-secondary">
+                            <i class="fas fa-clock"></i> 修改时间
+                        </a>
+                        <form action="{{ url_for('delete_post', post_id=post.id) }}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('确定要删除这篇博客吗？')">删除</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

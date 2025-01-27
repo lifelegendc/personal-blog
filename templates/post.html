@@ -12,11 +12,6 @@
                 {% if current_user.is_authenticated and post.author == current_user %}
                 <a href="{{ url_for('edit_post', post_id=post.id) }}" class="btn btn-sm btn-outline-secondary ms-2">编辑</a>
                 {% endif %}
-                {% if current_user.is_authenticated %}
-                <a href="{{ url_for('edit_time', post_id=post.id) }}" class="btn btn-sm btn-outline-secondary ml-2">
-                    <i class="fas fa-clock"></i> 修改时间
-                </a>
-                {% endif %}
             </p>
             <div class="content">
                 {{ content|safe }}

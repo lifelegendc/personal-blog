@@ -162,9 +162,13 @@ def delete_post(post_id):
     return redirect(url_for('admin'))
 
 # 修改博客创建时间
-@app.route('/edit_time/<int:post_id>', methods=['GET', 'POST'])
+@app.route('/admin/edit_time/<int:post_id>', methods=['GET', 'POST'])
 @login_required
-def edit_time(post_id):
+def admin_edit_time(post_id):
+    if not current_user.username == 'admin':
+        flash('只有管理员可以修改博客时间！', 'error')
+        return redirect(url_for('index'))
+        
     post = Post.query.get_or_404(post_id)
     if request.method == 'POST':
         try:
@@ -172,10 +176,10 @@ def edit_time(post_id):
             post.created_at = new_time
             db.session.commit()
             flash('博客创建时间已更新！', 'success')
-            return redirect(url_for('post', post_id=post_id))
+            return redirect(url_for('admin'))
         except ValueError:
             flash('时间格式不正确，请使用 YYYY-MM-DD HH:MM:SS 格式', 'error')
-    return render_template('edit_time.html', post=post)
+    return render_template('admin/edit_time.html', post=post)
 
 # 退出登录
 @app.route('/logout')
