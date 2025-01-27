@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, g
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -18,24 +18,16 @@ if os.getenv('VERCEL_ENV') or os.getenv('PRODUCTION'):
     # 在生产环境中使用 SQLite 内存数据库
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
     app.config['ENV'] = 'production'
-    
-    # 在生产环境中初始化数据库和创建管理员用户
-    @app.before_first_request
-    def create_tables_and_admin():
-        db.create_all()
-        # 检查是否已存在管理员用户
-        admin = User.query.filter_by(username='admin').first()
-        if not admin:
-            admin = User(username='admin')
-            admin.set_password('casfoq-zavqy1-zUzxan')  # 使用之前设置的密码
-            db.session.add(admin)
-            db.session.commit()
 else:
     # 本地开发环境使用文件数据库
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///blog.db')
 
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
-login_manager = LoginManager(app)
+
+# 初始化 Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
 login_manager.login_view = 'login'
 
 # 用户模型
@@ -46,7 +38,7 @@ class User(UserMixin, db.Model):
     posts = db.relationship('Post', backref='author', lazy=True)
 
     def set_password(self, password):
-        self.password_hash = generate_password_hash(password, method='pbkdf2:sha256:600000')
+        self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
@@ -58,6 +50,25 @@ class Post(db.Model):
     content = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+def init_db():
+    """初始化数据库"""
+    with app.app_context():
+        db.create_all()
+        # 检查是否已存在管理员用户
+        admin = User.query.filter_by(username='admin').first()
+        if not admin:
+            admin = User(username='admin')
+            admin.set_password('casfoq-zavqy1-zUzxan')
+            db.session.add(admin)
+            db.session.commit()
+
+@app.before_request
+def before_request():
+    """在每个请求之前检查数据库是否已初始化"""
+    if not hasattr(g, '_database_initialized'):
+        init_db()
+        g._database_initialized = True
 
 @login_manager.user_loader
 def load_user(user_id):
