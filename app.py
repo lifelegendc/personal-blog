@@ -15,11 +15,11 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-key-please-change')
 
 # 检查是否在生产环境
 if os.getenv('VERCEL_ENV') or os.getenv('PRODUCTION'):
-    # 在生产环境中使用 SQLite 内存数据库
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    # 在生产环境中使用 PostgreSQL
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
     app.config['ENV'] = 'production'
 else:
-    # 本地开发环境使用文件数据库
+    # 本地开发环境使用 SQLite
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///blog.db')
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -61,14 +61,16 @@ def init_db():
             admin = User(username='admin')
             admin.set_password('casfoq-zavqy1-zUzxan')
             db.session.add(admin)
-            db.session.commit()
+            try:
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                app.logger.error(f"Error creating admin user: {str(e)}")
 
-@app.before_request
-def before_request():
-    """在每个请求之前检查数据库是否已初始化"""
-    if not hasattr(g, '_database_initialized'):
-        init_db()
-        g._database_initialized = True
+@app.before_first_request
+def before_first_request():
+    """在第一个请求之前初始化数据库"""
+    init_db()
 
 @login_manager.user_loader
 def load_user(user_id):
