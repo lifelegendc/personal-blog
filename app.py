@@ -160,13 +160,21 @@ def admin():
 @login_required
 def new_post():
     if request.method == 'POST':
-        title = request.form.get('title')
-        content = request.form.get('content')
-        post = Post(title=title, content=content, author=current_user)
-        db.session.add(post)
-        db.session.commit()
-        return redirect(url_for('admin'))
-    return render_template('edit_post.html')
+        try:
+            post = Post(
+                title=request.form['title'],
+                content=request.form['content'],
+                author=current_user
+            )
+            db.session.add(post)
+            db.session.commit()
+            flash('文章已发布', 'success')
+            return redirect(url_for('post', post_id=post.id))
+        except Exception as e:
+            db.session.rollback()
+            flash('发布失败：' + str(e), 'danger')
+            return render_template('edit_post.html', post=None)
+    return render_template('edit_post.html', post=None)
 
 # 编辑文章
 @app.route('/admin/post/<int:post_id>/edit', methods=['GET', 'POST'])
@@ -177,10 +185,16 @@ def edit_post(post_id):
         return redirect(url_for('admin'))
     
     if request.method == 'POST':
-        post.title = request.form.get('title')
-        post.content = request.form.get('content')
-        db.session.commit()
-        return redirect(url_for('admin'))
+        try:
+            post.title = request.form['title']
+            post.content = request.form['content']
+            db.session.commit()
+            flash('文章已更新', 'success')
+            return redirect(url_for('post', post_id=post.id))
+        except Exception as e:
+            db.session.rollback()
+            flash('保存失败：' + str(e), 'danger')
+            return render_template('edit_post.html', post=post)
     return render_template('edit_post.html', post=post)
 
 # 删除文章
