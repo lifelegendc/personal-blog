@@ -161,6 +161,22 @@ def delete_post(post_id):
         db.session.commit()
     return redirect(url_for('admin'))
 
+# 修改博客创建时间
+@app.route('/edit_time/<int:post_id>', methods=['GET', 'POST'])
+@login_required
+def edit_time(post_id):
+    post = Post.query.get_or_404(post_id)
+    if request.method == 'POST':
+        try:
+            new_time = datetime.strptime(request.form['created_at'], '%Y-%m-%d %H:%M:%S')
+            post.created_at = new_time
+            db.session.commit()
+            flash('博客创建时间已更新！', 'success')
+            return redirect(url_for('post', post_id=post_id))
+        except ValueError:
+            flash('时间格式不正确，请使用 YYYY-MM-DD HH:MM:SS 格式', 'error')
+    return render_template('edit_time.html', post=post)
+
 # 退出登录
 @app.route('/logout')
 @login_required
