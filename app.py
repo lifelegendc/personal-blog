@@ -58,7 +58,8 @@ def init_db():
     """初始化数据库"""
     try:
         # 创建所有表
-        db.create_all()
+        with app.app_context():
+            db.create_all()
         logger.info("数据库表创建成功")
 
         # 检查是否存在管理员用户
@@ -77,8 +78,7 @@ def init_db():
         raise
 
 # 在应用启动时初始化数据库
-with app.app_context():
-    init_db()
+init_db()
 
 # 首页路由
 @app.route('/')
