@@ -18,6 +18,18 @@ if os.getenv('VERCEL_ENV') or os.getenv('PRODUCTION'):
     # 在生产环境中使用 SQLite 内存数据库
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
     app.config['ENV'] = 'production'
+    
+    # 在生产环境中初始化数据库和创建管理员用户
+    @app.before_first_request
+    def create_tables_and_admin():
+        db.create_all()
+        # 检查是否已存在管理员用户
+        admin = User.query.filter_by(username='admin').first()
+        if not admin:
+            admin = User(username='admin')
+            admin.set_password('casfoq-zavqy1-zUzxan')  # 使用之前设置的密码
+            db.session.add(admin)
+            db.session.commit()
 else:
     # 本地开发环境使用文件数据库
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///blog.db')
@@ -131,6 +143,4 @@ def logout():
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
     app.run(debug=True, host='0.0.0.0', port=8080)
