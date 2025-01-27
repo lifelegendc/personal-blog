@@ -6,6 +6,11 @@ import markdown
 from datetime import datetime
 import os
 from dotenv import load_dotenv
+import logging
+
+# 配置日志
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # 加载环境变量
 load_dotenv()
@@ -24,11 +29,8 @@ db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
-# 数据库初始化
-with app.app_context():
-    db.create_all()
-
 class User(UserMixin, db.Model):
+    __tablename__ = 'users'  # 显式指定表名
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(120), nullable=False)
@@ -41,27 +43,42 @@ class User(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
 
 class Post(db.Model):
+    __tablename__ = 'posts'  # 显式指定表名
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     content = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-def create_admin():
-    """Create admin user if it doesn't exist"""
-    if not User.query.filter_by(username='admin').first():
-        admin = User(username='admin')
-        admin.set_password('casfoq-zavqy1-zUzxan')
-        db.session.add(admin)
-        db.session.commit()
+def init_db():
+    """初始化数据库"""
+    try:
+        # 创建所有表
+        db.create_all()
+        logger.info("数据库表创建成功")
 
-# 创建管理员用户
+        # 检查是否存在管理员用户
+        admin = User.query.filter_by(username='admin').first()
+        if not admin:
+            admin = User(username='admin')
+            admin.set_password('casfoq-zavqy1-zUzxan')
+            db.session.add(admin)
+            db.session.commit()
+            logger.info("管理员用户创建成功")
+        else:
+            logger.info("管理员用户已存在")
+    except Exception as e:
+        logger.error(f"数据库初始化错误: {str(e)}")
+        db.session.rollback()
+        raise
+
+# 在应用启动时初始化数据库
 with app.app_context():
-    create_admin()
+    init_db()
 
 # 首页路由
 @app.route('/')
