@@ -2,8 +2,9 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-import markdown
 from datetime import datetime
+from sqlalchemy import or_
+import markdown
 import os
 from dotenv import load_dotenv
 import logging
@@ -192,6 +193,22 @@ def admin_edit_time(post_id):
 def logout():
     logout_user()
     return redirect(url_for('index'))
+
+@app.route('/search')
+def search():
+    query = request.args.get('q', '')
+    if query:
+        # 使用 SQLAlchemy 的 or_ 和 like 进行模糊搜索
+        search_results = Post.query.filter(
+            or_(
+                Post.title.like(f'%{query}%'),
+                Post.content.like(f'%{query}%')
+            )
+        ).order_by(Post.created_at.desc()).all()
+    else:
+        search_results = []
+    
+    return render_template('search.html', posts=search_results, query=query)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8080)

@@ -3,6 +3,15 @@
 {% block title %}首页 - 个人博客{% endblock %}
 
 {% block content %}
+<div class="row mb-4">
+    <div class="col-md-8 offset-md-2">
+        <form action="{{ url_for('search') }}" method="get" class="d-flex">
+            <input type="search" name="q" class="form-control me-2" placeholder="搜索文章..." aria-label="Search" value="{{ request.args.get('q', '') }}">
+            <button class="btn btn-outline-primary" type="submit">搜索</button>
+        </form>
+    </div>
+</div>
+
 <div class="row">
     <div class="col-md-8 offset-md-2">
         <h1 class="mb-4">最新文章</h1>
