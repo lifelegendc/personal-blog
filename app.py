@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, g
+from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -6,39 +6,28 @@ import markdown
 from datetime import datetime
 import os
 from dotenv import load_dotenv
-import re
 
 # 加载环境变量
 load_dotenv()
-
-def get_database_url():
-    """获取数据库 URL 并处理 Neon 数据库 URL 格式"""
-    if os.getenv('VERCEL_ENV') or os.getenv('PRODUCTION'):
-        db_url = os.getenv('DATABASE_URL')
-        if db_url and db_url.startswith('postgres://'):
-            # 将 postgres:// 替换为 postgresql://
-            db_url = db_url.replace('postgres://', 'postgresql://', 1)
-        return db_url
-    return os.getenv('DATABASE_URL', 'sqlite:///blog.db')
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-key-please-change')
 
 # 数据库配置
-app.config['SQLALCHEMY_DATABASE_URI'] = get_database_url()
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_ECHO'] = False
-if os.getenv('VERCEL_ENV') or os.getenv('PRODUCTION'):
-    app.config['ENV'] = 'production'
+database_url = os.getenv('DATABASE_URL')
+if database_url and database_url.startswith('postgres://'):
+    database_url = database_url.replace('postgres://', 'postgresql://', 1)
 
-db = SQLAlchemy(app, engine_options={"echo": False})
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url or 'sqlite:///blog.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
 
 # 初始化 Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# 用户模型
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
@@ -51,7 +40,6 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-# 文章模型
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
@@ -59,26 +47,14 @@ class Post(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-def init_db():
-    """初始化数据库"""
-    with app.app_context():
-        db.create_all()
-        # 检查是否已存在管理员用户
-        admin = User.query.filter_by(username='admin').first()
-        if not admin:
-            admin = User(username='admin')
-            admin.set_password('casfoq-zavqy1-zUzxan')
-            db.session.add(admin)
-            try:
-                db.session.commit()
-            except Exception as e:
-                db.session.rollback()
-                app.logger.error(f"Error creating admin user: {str(e)}")
-
 @app.before_first_request
-def before_first_request():
-    """在第一个请求之前初始化数据库"""
-    init_db()
+def init_db():
+    db.create_all()
+    if not User.query.filter_by(username='admin').first():
+        admin = User(username='admin')
+        admin.set_password('casfoq-zavqy1-zUzxan')
+        db.session.add(admin)
+        db.session.commit()
 
 @login_manager.user_loader
 def load_user(user_id):
