@@ -120,8 +120,11 @@ def login():
 @app.route('/admin')
 @login_required
 def admin():
-    posts = Post.query.filter_by(author=current_user).order_by(Post.created_at.desc()).all()
-    return render_template('admin.html', posts=posts)
+    if not current_user.username == 'admin':
+        flash('只有管理员可以访问后台！', 'error')
+        return redirect(url_for('index'))
+    posts = Post.query.order_by(Post.created_at.desc()).all()
+    return render_template('admin/index.html', posts=posts)
 
 # 创建新文章
 @app.route('/admin/post/new', methods=['GET', 'POST'])
