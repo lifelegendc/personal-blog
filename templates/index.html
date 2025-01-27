@@ -16,30 +16,51 @@
     </div>
 
     <div class="row">
-        <div class="col-md-8 offset-md-2" id="searchResults">
-            <h1 class="page-title mb-5">最新文章</h1>
-            <div class="articles-container">
-                {% for post in posts %}
-                <article class="card fade-in" style="animation-delay: {{ loop.index0 * 0.1 }}s">
-                    <div class="card-body">
-                        <h2 class="card-title">
-                            <a href="{{ url_for('post', post_id=post.id) }}">{{ post.title }}</a>
-                        </h2>
-                        <p class="text-muted">
-                            <i class="fas fa-calendar-alt me-2"></i>
-                            发布于 {{ post.created_at.strftime('%Y-%m-%d %H:%M') }}
-                        </p>
-                        <p class="card-text">{{ post.content[:200] }}...</p>
-                        <a href="{{ url_for('post', post_id=post.id) }}" class="btn btn-primary">
-                            阅读更多 <i class="fas fa-arrow-right ms-2"></i>
-                        </a>
-                    </div>
-                </article>
-                {% else %}
-                <div class="text-center py-5">
-                    <p class="text-muted">暂无文章</p>
-                </div>
+        <div class="col-md-8 offset-md-2">
+            <div class="year-filter mb-4">
+                <a href="{{ url_for('index') }}" 
+                   class="btn {% if not current_year %}btn-primary{% else %}btn-outline-primary{% endif %} me-2">
+                    全部
+                </a>
+                {% for year_stat in years_stats %}
+                <a href="{{ url_for('index', year=year_stat.year) }}" 
+                   class="btn {% if current_year == year_stat.year %}btn-primary{% else %}btn-outline-primary{% endif %} me-2">
+                    {{ year_stat.year }} ({{ year_stat.count }})
+                </a>
                 {% endfor %}
+            </div>
+            
+            <div id="searchResults">
+                <h1 class="page-title mb-5">
+                    {% if current_year %}
+                        {{ current_year }}年文章
+                    {% else %}
+                        最新文章
+                    {% endif %}
+                </h1>
+                <div class="articles-container">
+                    {% for post in posts %}
+                    <article class="card fade-in" style="animation-delay: {{ loop.index0 * 0.1 }}s">
+                        <div class="card-body">
+                            <h2 class="card-title">
+                                <a href="{{ url_for('post', post_id=post.id) }}">{{ post.title }}</a>
+                            </h2>
+                            <p class="text-muted">
+                                <i class="fas fa-calendar-alt me-2"></i>
+                                发布于 {{ post.created_at.strftime('%Y-%m-%d %H:%M') }}
+                            </p>
+                            <p class="card-text">{{ post.content[:200] }}...</p>
+                            <a href="{{ url_for('post', post_id=post.id) }}" class="btn btn-primary">
+                                阅读更多 <i class="fas fa-arrow-right ms-2"></i>
+                            </a>
+                        </div>
+                    </article>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <p class="text-muted">暂无文章</p>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </div>

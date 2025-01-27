@@ -93,9 +93,36 @@ init_db()
 # 首页路由
 @app.route('/')
 def index():
-    posts = Post.query.order_by(Post.created_at.desc()).all()
+    # 获取年份参数
+    year = request.args.get('year', None)
+    
+    # 基础查询
+    query = Post.query
+
+    # 如果指定了年份，添加年份过滤
+    if year:
+        year = int(year)
+        query = query.filter(
+            db.extract('year', Post.created_at) == year
+        )
+
+    # 获取所有文章
+    posts = query.order_by(Post.created_at.desc()).all()
+
+    # 获取所有年份及其文章数量
+    years_query = db.session.query(
+        db.extract('year', Post.created_at).label('year'),
+        db.func.count(Post.id).label('count')
+    ).group_by(
+        db.extract('year', Post.created_at)
+    ).order_by(
+        db.desc('year')
+    ).all()
+
+    years_stats = [{'year': int(year), 'count': count} for year, count in years_query]
+
     footer_text = ''
-    return render_template('index.html', posts=posts, footer_text=footer_text)
+    return render_template('index.html', posts=posts, years_stats=years_stats, current_year=year, footer_text=footer_text)
 
 # 文章详情页
 @app.route('/post/<int:post_id>')
